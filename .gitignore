@@ -144,3 +144,7 @@ log_useful/
 # GreaseLM running generate
 filtered_concept.txt
 matcher_res.json
+
+# Test code  
+*.ipynb
+

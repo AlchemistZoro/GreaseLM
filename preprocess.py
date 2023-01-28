@@ -5,7 +5,7 @@ from preprocess_utils.convert_obqa import convert_to_obqa_statement
 from preprocess_utils.conceptnet import extract_english, construct_graph
 from preprocess_utils.grounding import create_matcher_patterns, ground
 from preprocess_utils.graph import generate_adj_data_from_grounded_concepts__use_LM
-
+from preprocess_utils.tagging import tag
 input_paths = {
     'csqa': {
         'train': './data/csqa/train_rand_split.jsonl',
@@ -46,6 +46,11 @@ output_paths = {
             'adj-dev': './data/csqa/graph/dev.graph.adj.pk',
             'adj-test': './data/csqa/graph/test.graph.adj.pk',
         },
+        'tagged':{
+            'train': './data/csqa/tagged/train.tagged.jsonl',
+            'dev': './data/csqa/tagged/dev.tagged.jsonl',
+            'test': './data/csqa/tagged/test.tagged.jsonl',
+        },
     },
     'obqa': {
         'statement': {
@@ -60,6 +65,11 @@ output_paths = {
             'train': './data/obqa/grounded/train.grounded.jsonl',
             'dev': './data/obqa/grounded/dev.grounded.jsonl',
             'test': './data/obqa/grounded/test.grounded.jsonl',
+        },
+        'tagged':{
+            'train': './data/obqa/tagged/train.tagged.jsonl',
+            'dev': './data/obqa/tagged/dev.tagged.jsonl',
+            'test': './data/obqa/tagged/test.tagged.jsonl',
         },
         'graph': {
             'adj-train': './data/obqa/graph/train.graph.adj.pk',
@@ -81,42 +91,54 @@ def main():
         raise NotImplementedError()
 
     routines = {
-        'common': [
-            {'func': extract_english, 'args': (input_paths['cpnet']['csv'], output_paths['cpnet']['csv'], output_paths['cpnet']['vocab'])},
-            {'func': construct_graph, 'args': (output_paths['cpnet']['csv'], output_paths['cpnet']['vocab'],
-                                               output_paths['cpnet']['unpruned-graph'], False)},
-            {'func': construct_graph, 'args': (output_paths['cpnet']['csv'], output_paths['cpnet']['vocab'],
-                                               output_paths['cpnet']['pruned-graph'], True)},
-            {'func': create_matcher_patterns, 'args': (output_paths['cpnet']['vocab'], output_paths['cpnet']['patterns'])},
-        ],
+        # 'common': [
+        #     {'func': extract_english, 'args': (input_paths['cpnet']['csv'], output_paths['cpnet']['csv'], output_paths['cpnet']['vocab'])},
+        #     {'func': construct_graph, 'args': (output_paths['cpnet']['csv'], output_paths['cpnet']['vocab'],
+        #                                        output_paths['cpnet']['unpruned-graph'], False)},
+        #     {'func': construct_graph, 'args': (output_paths['cpnet']['csv'], output_paths['cpnet']['vocab'],
+        #                                        output_paths['cpnet']['pruned-graph'], True)},
+        #     {'func': create_matcher_patterns, 'args': (output_paths['cpnet']['vocab'], output_paths['cpnet']['patterns'])},
+        # ],
         'csqa': [
-            {'func': convert_to_entailment, 'args': (input_paths['csqa']['train'], output_paths['csqa']['statement']['train'])},
-            {'func': convert_to_entailment, 'args': (input_paths['csqa']['dev'], output_paths['csqa']['statement']['dev'])},
-            {'func': convert_to_entailment, 'args': (input_paths['csqa']['test'], output_paths['csqa']['statement']['test'])},
-            {'func': ground, 'args': (output_paths['csqa']['statement']['train'], output_paths['cpnet']['vocab'],
-                                      output_paths['cpnet']['patterns'], output_paths['csqa']['grounded']['train'], args.nprocs)},
-            {'func': ground, 'args': (output_paths['csqa']['statement']['dev'], output_paths['cpnet']['vocab'],
-                                      output_paths['cpnet']['patterns'], output_paths['csqa']['grounded']['dev'], args.nprocs)},
-            {'func': ground, 'args': (output_paths['csqa']['statement']['test'], output_paths['cpnet']['vocab'],
-                                      output_paths['cpnet']['patterns'], output_paths['csqa']['grounded']['test'], args.nprocs)},
-            {'func': generate_adj_data_from_grounded_concepts__use_LM, 'args': (output_paths['csqa']['grounded']['train'], output_paths['cpnet']['pruned-graph'], output_paths['cpnet']['vocab'], output_paths['csqa']['graph']['adj-train'], args.nprocs)},
-            {'func': generate_adj_data_from_grounded_concepts__use_LM, 'args': (output_paths['csqa']['grounded']['dev'], output_paths['cpnet']['pruned-graph'], output_paths['cpnet']['vocab'], output_paths['csqa']['graph']['adj-dev'], args.nprocs)},
-            {'func': generate_adj_data_from_grounded_concepts__use_LM, 'args': (output_paths['csqa']['grounded']['test'], output_paths['cpnet']['pruned-graph'], output_paths['cpnet']['vocab'], output_paths['csqa']['graph']['adj-test'], args.nprocs)},
+        #     {'func': convert_to_entailment, 'args': (input_paths['csqa']['train'], output_paths['csqa']['statement']['train'])},
+        #     {'func': convert_to_entailment, 'args': (input_paths['csqa']['dev'], output_paths['csqa']['statement']['dev'])},
+        #     {'func': convert_to_entailment, 'args': (input_paths['csqa']['test'], output_paths['csqa']['statement']['test'])},
+        #     {'func': ground, 'args': (output_paths['csqa']['statement']['train'], output_paths['cpnet']['vocab'],
+        #                               output_paths['cpnet']['patterns'], output_paths['csqa']['grounded']['train'], args.nprocs)},
+        #     {'func': ground, 'args': (output_paths['csqa']['statement']['dev'], output_paths['cpnet']['vocab'],
+        #                               output_paths['cpnet']['patterns'], output_paths['csqa']['grounded']['dev'], args.nprocs)},
+        #     {'func': ground, 'args': (output_paths['csqa']['statement']['test'], output_paths['cpnet']['vocab'],
+        #                               output_paths['cpnet']['patterns'], output_paths['csqa']['grounded']['test'], args.nprocs)},
+        {'func': tag, 'args': (output_paths['csqa']['statement']['train'], output_paths['cpnet']['vocab'],
+                                    output_paths['cpnet']['patterns'], output_paths['csqa']['tagged']['train'], args.nprocs)},
+        {'func': tag, 'args': (output_paths['csqa']['statement']['dev'], output_paths['cpnet']['vocab'],
+                                    output_paths['cpnet']['patterns'], output_paths['csqa']['tagged']['dev'], args.nprocs)},
+        {'func': tag, 'args': (output_paths['csqa']['statement']['test'], output_paths['cpnet']['vocab'],
+                                    output_paths['cpnet']['patterns'], output_paths['csqa']['tagged']['test'], args.nprocs)},
+        #     {'func': generate_adj_data_from_grounded_concepts__use_LM, 'args': (output_paths['csqa']['grounded']['train'], output_paths['cpnet']['pruned-graph'], output_paths['cpnet']['vocab'], output_paths['csqa']['graph']['adj-train'], args.nprocs)},
+        #     {'func': generate_adj_data_from_grounded_concepts__use_LM, 'args': (output_paths['csqa']['grounded']['dev'], output_paths['cpnet']['pruned-graph'], output_paths['cpnet']['vocab'], output_paths['csqa']['graph']['adj-dev'], args.nprocs)},
+        #     {'func': generate_adj_data_from_grounded_concepts__use_LM, 'args': (output_paths['csqa']['grounded']['test'], output_paths['cpnet']['pruned-graph'], output_paths['cpnet']['vocab'], output_paths['csqa']['graph']['adj-test'], args.nprocs)},
         ],
 
         'obqa': [
-            {'func': convert_to_obqa_statement, 'args': (input_paths['obqa']['train'], output_paths['obqa']['statement']['train'], output_paths['obqa']['statement']['train-fairseq'])},
-            {'func': convert_to_obqa_statement, 'args': (input_paths['obqa']['dev'], output_paths['obqa']['statement']['dev'], output_paths['obqa']['statement']['dev-fairseq'])},
-            {'func': convert_to_obqa_statement, 'args': (input_paths['obqa']['test'], output_paths['obqa']['statement']['test'], output_paths['obqa']['statement']['test-fairseq'])},
-            {'func': ground, 'args': (output_paths['obqa']['statement']['train'], output_paths['cpnet']['vocab'],
-                                      output_paths['cpnet']['patterns'], output_paths['obqa']['grounded']['train'], args.nprocs)},
-            {'func': ground, 'args': (output_paths['obqa']['statement']['dev'], output_paths['cpnet']['vocab'],
-                                      output_paths['cpnet']['patterns'], output_paths['obqa']['grounded']['dev'], args.nprocs)},
-            {'func': ground, 'args': (output_paths['obqa']['statement']['test'], output_paths['cpnet']['vocab'],
-                                      output_paths['cpnet']['patterns'], output_paths['obqa']['grounded']['test'], args.nprocs)},
-            {'func': generate_adj_data_from_grounded_concepts__use_LM, 'args': (output_paths['obqa']['grounded']['train'], output_paths['cpnet']['pruned-graph'], output_paths['cpnet']['vocab'], output_paths['obqa']['graph']['adj-train'], args.nprocs)},
-            {'func': generate_adj_data_from_grounded_concepts__use_LM, 'args': (output_paths['obqa']['grounded']['dev'], output_paths['cpnet']['pruned-graph'], output_paths['cpnet']['vocab'], output_paths['obqa']['graph']['adj-dev'], args.nprocs)},
-            {'func': generate_adj_data_from_grounded_concepts__use_LM, 'args': (output_paths['obqa']['grounded']['test'], output_paths['cpnet']['pruned-graph'], output_paths['cpnet']['vocab'], output_paths['obqa']['graph']['adj-test'], args.nprocs)},
+            # {'func': convert_to_obqa_statement, 'args': (input_paths['obqa']['train'], output_paths['obqa']['statement']['train'], output_paths['obqa']['statement']['train-fairseq'])},
+            # {'func': convert_to_obqa_statement, 'args': (input_paths['obqa']['dev'], output_paths['obqa']['statement']['dev'], output_paths['obqa']['statement']['dev-fairseq'])},
+            # {'func': convert_to_obqa_statement, 'args': (input_paths['obqa']['test'], output_paths['obqa']['statement']['test'], output_paths['obqa']['statement']['test-fairseq'])},
+            # {'func': ground, 'args': (output_paths['obqa']['statement']['train'], output_paths['cpnet']['vocab'],
+            #                           output_paths['cpnet']['patterns'], output_paths['obqa']['grounded']['train'], args.nprocs)},
+            # {'func': ground, 'args': (output_paths['obqa']['statement']['dev'], output_paths['cpnet']['vocab'],
+            #                           output_paths['cpnet']['patterns'], output_paths['obqa']['grounded']['dev'], args.nprocs)},
+            # {'func': ground, 'args': (output_paths['obqa']['statement']['test'], output_paths['cpnet']['vocab'],
+            #                           output_paths['cpnet']['patterns'], output_paths['obqa']['grounded']['test'], args.nprocs)},
+            {'func': tag, 'args': (output_paths['obqa']['statement']['train'], output_paths['cpnet']['vocab'],
+                                      output_paths['cpnet']['patterns'], output_paths['obqa']['tagged']['train'], args.nprocs)},
+            {'func': tag, 'args': (output_paths['obqa']['statement']['dev'], output_paths['cpnet']['vocab'],
+                                      output_paths['cpnet']['patterns'], output_paths['obqa']['tagged']['dev'], args.nprocs)},
+            {'func': tag, 'args': (output_paths['obqa']['statement']['test'], output_paths['cpnet']['vocab'],
+                                      output_paths['cpnet']['patterns'], output_paths['obqa']['tagged']['test'], args.nprocs)},
+            # {'func': generate_adj_data_from_grounded_concepts__use_LM, 'args': (output_paths['obqa']['grounded']['train'], output_paths['cpnet']['pruned-graph'], output_paths['cpnet']['vocab'], output_paths['obqa']['graph']['adj-train'], args.nprocs)},
+            # {'func': generate_adj_data_from_grounded_concepts__use_LM, 'args': (output_paths['obqa']['grounded']['dev'], output_paths['cpnet']['pruned-graph'], output_paths['cpnet']['vocab'], output_paths['obqa']['graph']['adj-dev'], args.nprocs)},
+            # {'func': generate_adj_data_from_grounded_concepts__use_LM, 'args': (output_paths['obqa']['grounded']['test'], output_paths['cpnet']['pruned-graph'], output_paths['cpnet']['vocab'], output_paths['obqa']['graph']['adj-test'], args.nprocs)},
         ],
     }
 
