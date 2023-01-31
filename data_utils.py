@@ -221,7 +221,7 @@ class GreaseLM_DataLoader(object):
         # except:
         #     tokenizer_class = {'bert': BertTokenizer, 'xlnet': XLNetTokenizer, 'roberta': RobertaTokenizer}.get(self.model_type)
         # use autotokenizer to use tagging
-        tokenizer = AutoTokenizer.from_pretrained(self.model_name,use_fast =True)
+        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         #tokenizer = tokenizer_class.from_pretrained(self.model_name)
         self.tokenizer = tokenizer
 

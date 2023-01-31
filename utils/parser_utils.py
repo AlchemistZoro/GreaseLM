@@ -53,6 +53,13 @@ def add_data_arguments(parser):
     parser.add_argument('--train_statements', default='{data_dir}/{dataset}/statement/train.statement.jsonl')
     parser.add_argument('--dev_statements', default='{data_dir}/{dataset}/statement/dev.statement.jsonl')
     parser.add_argument('--test_statements', default='{data_dir}/{dataset}/statement/test.statement.jsonl')
+    
+    # tagged 
+    parser.add_argument('--train_tagged', default='{data_dir}/{dataset}/tagged/train.tagged.jsonl')
+    parser.add_argument('--dev_tagged', default='{data_dir}/{dataset}/tagged/dev.tagged.jsonl')
+    parser.add_argument('--test_tagged', default='{data_dir}/{dataset}/tagged/test.tagged.jsonl')
+    
+
     # preprocessing options
     parser.add_argument('-sl', '--max_seq_len', default=100, type=int)
     # set dataset defaults
@@ -62,11 +69,16 @@ def add_data_arguments(parser):
                         inhouse_train_qids=args.inhouse_train_qids.format(dataset=args.dataset))
     data_splits = ('train', 'dev') if args.dataset in DATASET_NO_TEST else ('train', 'dev', 'test')
     for split in data_splits:
-        for attribute in ('statements',):
+        # 这里不加上tagged，tagged的文件路径的{data_dir}不会被替代会如下所示
+        #{data_dir}/{dataset}/tagged/train.tagged.jsonl
+        for attribute in ('statements','tagged'):
             attr_name = f'{split}_{attribute}'
             parser.set_defaults(**{attr_name: getattr(args, attr_name).format(dataset=args.dataset, data_dir=args.data_dir)})
     if 'test' not in data_splits:
         parser.set_defaults(test_statements=None)
+    # args, _ = parser.parse_known_args()
+    # print(args.train_statements,args.train_tagged)
+    # input()
 
 
 def add_encoder_arguments(parser):
@@ -106,4 +118,5 @@ def get_parser():
     add_encoder_arguments(parser)
     add_optimization_arguments(parser)
     add_additional_arguments(parser)
+    
     return parser

@@ -61,7 +61,11 @@ def load_data(args, devices, kg):
         model_name=args.encoder,
         max_node_num=args.max_node_num, max_seq_length=args.max_seq_len,
         is_inhouse=args.inhouse, inhouse_train_qids_path=args.inhouse_train_qids,
-        subsample=args.subsample, n_train=args.n_train, debug=args.debug, cxt_node_connects_all=args.cxt_node_connects_all, kg=kg)
+        subsample=args.subsample, n_train=args.n_train, debug=args.debug, cxt_node_connects_all=args.cxt_node_connects_all, kg=kg,emp=args.emp,
+        train_tagged_path = args.train_tagged,
+        dev_tagged_path=args.dev_tagged,
+        test_tagged_path=args.test_tagged,
+        )
 
     return dataset
 
@@ -560,7 +564,8 @@ if __name__ == '__main__':
 
     parser = parser_utils.get_parser()
     args, _ = parser.parse_known_args()
-
+    # print(args.train_statements,args.train_tagged)
+    # input()
     # General
     parser.add_argument('--mode', default='train', choices=['train', 'eval'], help='run training or evaluation')
     parser.add_argument('--save_dir', default=f'./saved_models/greaselm/', help='model output directory')
@@ -609,5 +614,10 @@ if __name__ == '__main__':
     parser.add_argument('--refreeze_epoch', default=10000, type=int)
     parser.add_argument('--init_range', default=0.02, type=float, help='stddev when initializing with normal distribution')
 
+    # MyGLM
+    parser.add_argument('--emp',default=True,type=bool)
+    
     args = parser.parse_args()
+    # print(args.train_statements,args.train_tagged)
+ 
     main(args)

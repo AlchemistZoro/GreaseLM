@@ -173,8 +173,10 @@ def tag(statement_path, cpnet_vocab_path, pattern_path, output_path, num_process
 
     # check_path(output_path)
     with open(output_path, 'w') as fout:
-        for dic in res:
-            fout.write(json.dumps(dic) + '\n')
+        # change write file to json format
+        fout.write(json.dumps(res))
+        # for dic in res:
+        #     fout.write(json.dumps(dic) + '\n')
 
     print(f'grounded concepts saved to {output_path}')
     print()
@@ -185,7 +187,7 @@ if __name__ == "__main__":
     statement_path = '../data/csqa/statement/test.statement.jsonl'
     cpnet_vocab_path = '../data/cpnet/concept.txt'
     pattern_path = '../data/cpnet/matcher_patterns.json'
-    output_path = '../data/obqa/tagged/test.tagged.jsonl'
+    output_path = '../data/obqa/tagged/test.jsonl'
     num_processes = 1
     debug=True
     tag(statement_path, cpnet_vocab_path, pattern_path, output_path, num_processes, debug)

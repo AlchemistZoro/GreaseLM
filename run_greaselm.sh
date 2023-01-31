@@ -2,7 +2,6 @@
 export TOKENIZERS_PARALLELISM=true
 dt=`date '+%Y%m%d_%H%M%S'`
 
-
 dataset=$1
 shift
 encoder='roberta-large'
