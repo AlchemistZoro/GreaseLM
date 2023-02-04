@@ -80,8 +80,11 @@ class MultiGPUSparseAdjDataBatchGenerator(object):
             #edge_type_all:  nested list of shape (n_samples, num_choice), where each entry is tensor[E, ]
             edge_index = self._to_device([edge_index_all[i] for i in batch_indexes], self.device1)
             edge_type  = self._to_device([edge_type_all[i] for i in batch_indexes], self.device1)
-
-            yield tuple([batch_qids, batch_labels, *batch_tensors0, *batch_lists0, *batch_tensors1, *batch_lists1, edge_index, edge_type])
+            # print('dataloader values',len(batch_tensors0),len(batch_tensors0),len(batch_lists0),len(batch_lists1))
+            bs_data = tuple([batch_qids, batch_labels, *batch_tensors0, *batch_lists0, *batch_tensors1, *batch_lists1, edge_index, edge_type])
+            # print('dataloader return data',len(bs_data))
+            # input()
+            yield bs_data
 
     def _to_device(self, obj, device):
         if isinstance(obj, (tuple, list)):
@@ -190,6 +193,7 @@ class GreaseLM_DataLoader(object):
             train_indexes = self.inhouse_train_indexes[torch.randperm(n_train)]
         else:
             train_indexes = torch.randperm(len(self.train_qids))
+        print(len(self.train_decoder_data),len(self.train_decoder_data),len(self.train_adj_data))
         return MultiGPUSparseAdjDataBatchGenerator(self.device0, self.device1, self.batch_size, train_indexes, self.train_qids, self.train_labels, tensors0=self.train_encoder_data, tensors1=self.train_decoder_data, adj_data=self.train_adj_data)
 
     def train_eval(self):
@@ -270,7 +274,7 @@ class GreaseLM_DataLoader(object):
             use_cache = False
 
         #debug
-        # use_cache = False
+        use_cache = False
         
         if use_cache:
             with open(cache_path, 'rb') as f:
@@ -676,7 +680,8 @@ def load_bert_xlnet_roberta_input_tensors(statement_jsonl_path, max_seq_length, 
         all_segment_ids = torch.tensor(select_field(features, 'segment_ids'), dtype=torch.long)
         all_output_mask = torch.tensor(select_field(features, 'output_mask'), dtype=torch.bool)
         all_label = torch.tensor([f.label for f in features], dtype=torch.long)
-        return all_input_ids, all_input_mask, all_segment_ids, all_output_mask, all_label
+        all_pool_mask = torch.tensor(select_field(features, 'pool_mask'), dtype=torch.int)
+        return all_input_ids, all_input_mask, all_segment_ids, all_output_mask, all_pool_mask,all_label,
 
     examples = read_examples(statement_jsonl_path)
     tagged = []

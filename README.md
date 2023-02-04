@@ -100,6 +100,16 @@ Similarly, to train GreaseLM on OpenbookQA, run
 CUDA_VISIBLE_DEVICES=0 ./run_greaselm.sh obqa --data_dir data/
 ```
 
+Embedding pool experiment test
+```
+CUDA_VISIBLE_DEVICES=0 ./run_greaselm.sh obqa --data_dir data/ --use_wandb True --emp True 
+```
+
+Debug
+```
+CUDA_VISIBLE_DEVICES=0 ./run_greaselm.sh obqa --data_dir data/  --emp True --debug True
+```
+
 To train GreaseLM on MedQA-USMLE, run
 ```
 CUDA_VISIBLE_DEVICES=0 ./run_greaselm__medqa_usmle.sh

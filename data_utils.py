@@ -221,7 +221,7 @@ class GreaseLM_DataLoader(object):
         # except:
         #     tokenizer_class = {'bert': BertTokenizer, 'xlnet': XLNetTokenizer, 'roberta': RobertaTokenizer}.get(self.model_type)
         # use autotokenizer to use tagging
-        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        tokenizer = AutoTokenizer.from_pretrained(self.model_name,use_fast =True)
         #tokenizer = tokenizer_class.from_pretrained(self.model_name)
         self.tokenizer = tokenizer
 
@@ -676,6 +676,7 @@ def load_bert_xlnet_roberta_input_tensors(statement_jsonl_path, max_seq_length, 
         all_segment_ids = torch.tensor(select_field(features, 'segment_ids'), dtype=torch.long)
         all_output_mask = torch.tensor(select_field(features, 'output_mask'), dtype=torch.bool)
         all_label = torch.tensor([f.label for f in features], dtype=torch.long)
+        
         return all_input_ids, all_input_mask, all_segment_ids, all_output_mask, all_label
 
     examples = read_examples(statement_jsonl_path)

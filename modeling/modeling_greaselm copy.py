@@ -1,4 +1,4 @@
-# 加上tagging 模式的greaselme
+# 原版的modeling_greaselm
 import logging
 import os
 
@@ -7,7 +7,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers import modeling_bert
 from transformers import modeling_roberta
-# from model import modeling_roberta 
 from transformers import PretrainedConfig
 from transformers.file_utils import (
     TF2_WEIGHTS_NAME,
@@ -22,8 +21,6 @@ from modeling import modeling_gnn
 
 from utils import layers
 from utils import utils
-from model.modeling_roberta import RobertaPoolEmbeddings
-
 
 logger = logging.getLogger(__name__)
 
@@ -80,14 +77,9 @@ class GreaseLM(nn.Module):
 
         #Here, merge the batch dimension and the num_choice dimension
         edge_index_orig, edge_type_orig = inputs[-2:]
-        _inputs = [x.reshape(x.size(0) * x.size(1), *x.size()[2:]) for x in inputs[:5]] + [x.reshape(x.size(0) * x.size(1), *x.size()[2:]) for x in inputs[5:-2]] + [sum(x,[]) for x in inputs[-2:]]
-        
-        *lm_inputs, concept_ids, node_type_ids, node_scores, adj_lengths, special_nodes_mask,edge_index, edge_type = _inputs
-        # print(len(_inputs),len(lm_inputs),len(inputs))
-        # input()
-        # special_nodes_mask = None
-        # print(len(lm_inputs),len(_inputs),len(inputs))
-        # input()
+        _inputs = [x.reshape(x.size(0) * x.size(1), *x.size()[2:]) for x in inputs[:4]] + [x.reshape(x.size(0) * x.size(1), *x.size()[2:]) for x in inputs[4:-2]] + [sum(x,[]) for x in inputs[-2:]]
+
+        *lm_inputs, concept_ids, node_type_ids, node_scores, adj_lengths, special_nodes_mask, edge_index, edge_type = _inputs
         node_scores = torch.zeros_like(node_scores)
         edge_index, edge_type = self.batch_graph(edge_index, edge_type, concept_ids.size(1))
         adj = (edge_index.to(node_type_ids.device), edge_type.to(node_type_ids.device)) #edge_index: [2, total_E]   edge_type: [total_E, ]
@@ -107,12 +99,12 @@ class GreaseLM(nn.Module):
     def get_fake_inputs(self, device="cuda:0"):
         bs = 4
         nc = 5
-        seq_len = 20
+        seq_len = 100
         input_ids = torch.zeros([bs, nc, seq_len], dtype=torch.long).to(device)
         token_type_ids = torch.zeros([bs, nc, seq_len], dtype=torch.long).to(device)
         attention_mask = torch.ones([bs, nc, seq_len]).to(device)
         output_mask = torch.zeros([bs, nc]).to(device)
-        pool_mask = torch.zeros([bs, nc, seq_len]).to(device)
+
         n_node = 200
         concept_ids = torch.arange(end=n_node).repeat(bs, nc, 1).to(device)
         adj_lengths = torch.zeros([bs, nc], dtype=torch.long).fill_(10).to(device)
@@ -128,7 +120,7 @@ class GreaseLM(nn.Module):
         node_type[:, :, 0] = 3
         node_score = torch.zeros([bs, nc, n_node, 1]).to(device)
         node_score[:, :, 1] = 180
-        return input_ids, attention_mask, token_type_ids, output_mask,pool_mask, concept_ids, node_type, node_score, adj_lengths, edge_index, edge_type
+        return input_ids, attention_mask, token_type_ids, output_mask, concept_ids, node_type, node_score, adj_lengths, edge_index, edge_type
 
     def check_outputs(self, logits, attn):
         bs = 4
@@ -138,8 +130,8 @@ class GreaseLM(nn.Module):
 
 
 def test_GreaseLM(device):
-    # cp_emb = torch.load("data/cpnet/cp_emb.pt")
-    model = GreaseLM().to(device)
+    cp_emb = torch.load("data/cpnet/cp_emb.pt")
+    model = GreaseLM(pretrained_concept_emb=cp_emb).to(device)
     inputs = model.get_fake_inputs(device)
     outputs = model(*inputs)
     model.check_outputs(*outputs)
@@ -205,7 +197,7 @@ class LMGNN(nn.Module):
         logits: [bs]
         """
         #LM inputs
-        input_ids, attention_mask, token_type_ids, output_mask,pool_mask = inputs
+        input_ids, attention_mask, token_type_ids, output_mask = inputs
 
         # GNN inputs
         concept_ids[concept_ids == 0] = self.cpnet_vocab_size + 2
@@ -213,8 +205,6 @@ class LMGNN(nn.Module):
         gnn_input[:, 0] = 0
         gnn_input = self.dropout_e(gnn_input) #(batch_size, n_node, dim_node)
 
-        # print(node_scores,adj_lengths,node_scores.shape,adj_lengths.shape)
-        # input()
         #Normalize node sore (use norm from Z)
         _mask = (torch.arange(node_scores.size(1), device=node_scores.device) < adj_lengths.unsqueeze(1)).float() #0 means masked out #[batch_size, n_node]
         node_scores = -node_scores
@@ -226,7 +216,7 @@ class LMGNN(nn.Module):
         node_scores = node_scores.unsqueeze(2) #[batch_size, n_node, 1]
 
         # Merged core
-        outputs, gnn_output = self.mp(input_ids, token_type_ids, attention_mask, output_mask, pool_mask,gnn_input, adj, node_type_ids, node_scores, special_nodes_mask, output_hidden_states=True)
+        outputs, gnn_output = self.mp(input_ids, token_type_ids, attention_mask, output_mask, gnn_input, adj, node_type_ids, node_scores, special_nodes_mask, output_hidden_states=True)
         # outputs: ([bs, seq_len, sent_dim], [bs, sent_dim], ([bs, seq_len, sent_dim] for _ in range(25)))
         # gnn_output: [bs, n_node, dim_node]
 
@@ -236,8 +226,8 @@ class LMGNN(nn.Module):
 
         sent_vecs = self.mp.pooler(hidden_states) # [bs, sent_dim]
 
-        # sent_token_mask = output_mask.clone()
-        # sent_token_mask[:, 0] = 0
+        sent_token_mask = output_mask.clone()
+        sent_token_mask[:, 0] = 0
 
         # GNN outputs
         Z_vecs = gnn_output[:,0]   #(batch_size, dim_node)
@@ -251,8 +241,8 @@ class LMGNN(nn.Module):
         graph_vecs, pool_attn = self.pooler(sent_vecs_for_pooler, gnn_output, mask)
         # graph_vecs: [bs, node_dim]
 
-        # sent_node_mask = special_nodes_mask.clone()
-        # sent_node_mask[:, 0] = 0
+        sent_node_mask = special_nodes_mask.clone()
+        sent_node_mask[:, 0] = 0
 
         if cache_output:
             self.concept_ids = concept_ids
@@ -270,8 +260,7 @@ class LMGNN(nn.Module):
         input_ids = torch.zeros([bs, seq_len], dtype=torch.long).to(device)
         token_type_ids = torch.zeros([bs, seq_len], dtype=torch.long).to(device)
         attention_mask = torch.ones([bs, seq_len]).to(device)
-        pool_mask = torch.zeros([bs, seq_len], dtype=torch.long).to(device)
-        
+
         n_node = 200
         concept_ids = torch.arange(end=n_node).repeat(bs, 1).to(device)
         adj_lengths = torch.zeros([bs], dtype=torch.long).fill_(10).to(device)
@@ -286,7 +275,7 @@ class LMGNN(nn.Module):
         node_score = torch.zeros([bs, n_node, 1]).to(device)
         node_score[:, 1] = 180
 
-        return (input_ids, attention_mask, token_type_ids, None,pool_mask), concept_ids, node_type, node_score, adj_lengths,adj
+        return (input_ids, attention_mask, token_type_ids, None), concept_ids, node_type, node_score, adj_lengths, adj
 
     def check_outputs(self, logits, pool_attn):
         bs = 20
@@ -295,8 +284,8 @@ class LMGNN(nn.Module):
 
 
 def test_LMGNN(device):
-    # cp_emb = torch.load("data/cpnet/cp_emb.pt")
-    model = LMGNN().to(device)
+    cp_emb = torch.load("data/cpnet/cp_emb.pt")
+    model = LMGNN(pretrained_concept_emb=cp_emb).to(device)
     inputs = model.get_fake_inputs(device)
     outputs = model(*inputs)
     model.check_outputs(*outputs)
@@ -336,9 +325,7 @@ class TextKGMessagePassing(ModelClass):
 
         self.sent_dim = config.hidden_size
 
-        # self.embeddings = RobertaPoolEmbeddings(config)
-
-    def forward(self, input_ids, token_type_ids, attention_mask, special_tokens_mask, pool_mask,H, A, node_type, node_score, special_nodes_mask, cache_output=False, position_ids=None, head_mask=None, output_hidden_states=True):
+    def forward(self, input_ids, token_type_ids, attention_mask, special_tokens_mask, H, A, node_type, node_score, special_nodes_mask, cache_output=False, position_ids=None, head_mask=None, output_hidden_states=True):
         """
         input_ids: [bs, seq_len]
         token_type_ids: [bs, seq_len]
@@ -393,12 +380,7 @@ class TextKGMessagePassing(ModelClass):
         else:
             head_mask = [None] * self.config.num_hidden_layers
 
-        # without pool 
         embedding_output = self.embeddings(input_ids, position_ids=position_ids, token_type_ids=token_type_ids)
-
-  
-        
-        # embedding_output = self.embeddings(input_ids, position_ids=position_ids, token_type_ids=token_type_ids,pool_mask = pool_mask)
 
         # GNN inputs
         _batch_size, _n_nodes = node_type.size()
@@ -528,7 +510,7 @@ class TextKGMessagePassing(ModelClass):
         local_files_only = kwargs.pop("local_files_only", False)
         use_cdn = kwargs.pop("use_cdn", True)
 
-        # k = kwargs["k"]
+        k = kwargs["k"]
 
         # Load config if we don't provide a configuration
         if not isinstance(config, PretrainedConfig):
@@ -747,18 +729,14 @@ class TextKGMessagePassing(ModelClass):
         return model
 
     def get_fake_inputs(self, device="cuda:0"):
-        bs = 2
-        seq_len = 10
-        input_ids = torch.randint(1,10,[bs, seq_len], dtype=torch.long).to(device)
+        bs = 20
+        seq_len = 100
+        input_ids = torch.zeros([bs, seq_len], dtype=torch.long).to(device)
         token_type_ids = torch.zeros([bs, seq_len], dtype=torch.long).to(device)
         attention_mask = torch.ones([bs, seq_len]).to(device)
-        special_tokens_mask = torch.zeros([bs, seq_len], dtype=torch.long).to(device)
-        
         
         # pool_mask 
-        pool_mask = torch.zeros([bs, seq_len], dtype=torch.long).to(device)
-        pool_mask[0][1:3] = 1
-        pool_mask[-1][5:7] = 1
+        # pool_mask = torch.zeros([bs,seq_len]).to(device)
 
         n_node = 200
         H = torch.zeros([bs, n_node, self.hidden_size]).to(device)
@@ -771,12 +749,11 @@ class TextKGMessagePassing(ModelClass):
         node_type[:, 0] = 3
         node_score = torch.zeros([bs, n_node, 1]).to(device)
         node_score[:, 1] = 180
-        # special_nodes_mask,special_tokens_mask 这两个后续没有使用过
-        return input_ids, token_type_ids, attention_mask,pool_mask, H, A,  node_type, node_score
+        return input_ids, token_type_ids, attention_mask, H, A,  node_type, node_score
 
     def check_outputs(self, outputs, gnn_output):
-        bs = 2
-        seq_len =10
+        bs = 20
+        seq_len = 100
         assert outputs[0].size() == (bs, seq_len, self.sent_dim)
         n_node = 200
         assert gnn_output.size() == (bs, n_node, self.hidden_size)
@@ -915,8 +892,8 @@ if __name__ == "__main__":
                         level=logging.INFO)
 
     utils.print_cuda_info()
-    # free_gpus = utils.select_free_gpus()
-    device = torch.device("cuda:0")
+    free_gpus = utils.select_free_gpus()
+    device = torch.device("cuda:{}".format(free_gpus[0]))
 
     # test_RoBERTaGAT(device)
 
@@ -925,4 +902,3 @@ if __name__ == "__main__":
     # test_LMGNN(device)
 
     # test_GreaseLM(device)
-

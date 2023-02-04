@@ -53,20 +53,8 @@ def load_data(args, devices, kg):
     #########################################################
     # Construct the dataset
     #########################################################
-    # dataset = data_utils.GreaseLM_DataLoader(args.train_statements, args.train_adj,
-    #     args.dev_statements, args.dev_adj,
-    #     args.test_statements, args.test_adj,
-    #     batch_size=args.batch_size, eval_batch_size=args.eval_batch_size,
-    #     device=devices,
-    #     model_name=args.encoder,
-    #     max_node_num=args.max_node_num, max_seq_length=args.max_seq_len,
-    #     is_inhouse=args.inhouse, inhouse_train_qids_path=args.inhouse_train_qids,
-    #     subsample=args.subsample, n_train=args.n_train, debug=args.debug, cxt_node_connects_all=args.cxt_node_connects_all, kg=kg,emp=args.emp,
-    #     train_tagged_path = args.train_tagged,
-    #     dev_tagged_path=args.dev_tagged,
-    #     test_tagged_path=args.test_tagged,
-    #     )
-    dataset = data_utils_base.GreaseLM_DataLoader(args.train_statements, args.train_adj,
+    
+    dataset = data_utils.GreaseLM_DataLoader(args.train_statements, args.train_adj,
         args.dev_statements, args.dev_adj,
         args.test_statements, args.test_adj,
         batch_size=args.batch_size, eval_batch_size=args.eval_batch_size,
@@ -74,8 +62,23 @@ def load_data(args, devices, kg):
         model_name=args.encoder,
         max_node_num=args.max_node_num, max_seq_length=args.max_seq_len,
         is_inhouse=args.inhouse, inhouse_train_qids_path=args.inhouse_train_qids,
-        subsample=args.subsample, n_train=args.n_train, debug=args.debug, cxt_node_connects_all=args.cxt_node_connects_all, kg=kg
+        subsample=args.subsample, n_train=args.n_train, debug=args.debug, cxt_node_connects_all=args.cxt_node_connects_all, kg=kg,emp=args.emp,
+        train_tagged_path = args.train_tagged,
+        dev_tagged_path=args.dev_tagged,
+        test_tagged_path=args.test_tagged,
         )
+    
+    # GLM Dataloader base version
+    # dataset = data_utils_base.GreaseLM_DataLoader(args.train_statements, args.train_adj,
+    #     args.dev_statements, args.dev_adj,
+    #     args.test_statements, args.test_adj,
+    #     batch_size=args.batch_size, eval_batch_size=args.eval_batch_size,
+    #     device=devices,
+    #     model_name=args.encoder,
+    #     max_node_num=args.max_node_num, max_seq_length=args.max_seq_len,
+    #     is_inhouse=args.inhouse, inhouse_train_qids_path=args.inhouse_train_qids,
+    #     subsample=args.subsample, n_train=args.n_train, debug=args.debug, cxt_node_connects_all=args.cxt_node_connects_all, kg=kg
+    #     )
 
     return dataset
 
