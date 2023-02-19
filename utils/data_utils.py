@@ -698,7 +698,6 @@ def load_bert_xlnet_roberta_input_tensors(statement_jsonl_path, max_seq_length, 
 if __name__ == "__main__":
     
 
- 
     model_name = 'roberta-large'
     tokenizer = AutoTokenizer.from_pretrained(model_name,use_fast=True)   
     # model_name = 'bert-base-uncased'

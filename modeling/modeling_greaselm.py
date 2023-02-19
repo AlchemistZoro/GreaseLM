@@ -336,7 +336,7 @@ class TextKGMessagePassing(ModelClass):
 
         self.sent_dim = config.hidden_size
 
-        # self.embeddings = RobertaPoolEmbeddings(config)
+        self.embeddings = RobertaPoolEmbeddings(config)
 
     def forward(self, input_ids, token_type_ids, attention_mask, special_tokens_mask, pool_mask,H, A, node_type, node_score, special_nodes_mask, cache_output=False, position_ids=None, head_mask=None, output_hidden_states=True):
         """
@@ -394,11 +394,11 @@ class TextKGMessagePassing(ModelClass):
             head_mask = [None] * self.config.num_hidden_layers
 
         # without pool 
-        embedding_output = self.embeddings(input_ids, position_ids=position_ids, token_type_ids=token_type_ids)
+        # embedding_output = self.embeddings(input_ids, position_ids=position_ids, token_type_ids=token_type_ids)
 
   
         
-        # embedding_output = self.embeddings(input_ids, position_ids=position_ids, token_type_ids=token_type_ids,pool_mask = pool_mask)
+        embedding_output = self.embeddings(input_ids, position_ids=position_ids, token_type_ids=token_type_ids,pool_mask = pool_mask)
 
         # GNN inputs
         _batch_size, _n_nodes = node_type.size()

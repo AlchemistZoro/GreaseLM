@@ -216,7 +216,7 @@ def train(args, resume, has_test_split, devices, kg):
         tb_dir = os.path.join(args.save_dir, "tb")
         if not resume:
             with open(log_path, 'w') as fout:
-                fout.write('epoch,step,dev_acc,test_acc,best_dev_acc,final_test_acc,best_dev_epoch\n')
+                fout.write('epoch,step,dev_acc,test_acc,best_dev_acc,final_test_acc,best_dev_epoch,best_test_acc,best_test_epoch\n')
 
             if os.path.exists(tb_dir):
                 shutil.rmtree(tb_dir)
@@ -287,10 +287,13 @@ def train(args, resume, has_test_split, devices, kg):
         best_dev_epoch = checkpoint["best_dev_epoch"]
         best_dev_acc = checkpoint["best_dev_acc"]
         final_test_acc = checkpoint["final_test_acc"]
+        best_test_epoch = checkpoint["best_test_epoch"]
+        best_test_acc = checkpoint["best_test_acc"]
     else:
         last_epoch = -1
         global_step = 0
         best_dev_epoch = best_dev_acc = final_test_acc = 0
+        best_test_epoch = best_test_acc = 0
 
 
     #########################################################
@@ -418,11 +421,14 @@ def train(args, resume, has_test_split, devices, kg):
             best_dev_acc = dev_acc
             final_test_acc = test_acc
             best_dev_epoch = epoch_id
+        if test_acc>= best_test_acc:
+            best_test_acc = test_acc
+            best_test_epoch = epoch_id
         if not args.debug:
             with open(log_path, 'a') as fout:
                 fout.write('{:3},{:5},{:7.4f},{:7.4f},{:7.4f},{:7.4f},{:3}\n'.format(epoch_id, global_step, dev_acc, test_acc, best_dev_acc, final_test_acc, best_dev_epoch))
 
-        wandb.log({"dev_acc": dev_acc, "dev_loss": dev_total_loss, "best_dev_acc": best_dev_acc, "best_dev_epoch": best_dev_epoch}, step=global_step)
+        wandb.log({"dev_acc": dev_acc, "dev_loss": dev_total_loss, "best_dev_acc": best_dev_acc, "best_dev_epoch": best_dev_epoch,"best_test_acc": best_test_acc, "best_test_epoch": best_test_epoch}, step=global_step)
         if has_test_split:
             wandb.log({"test_acc": test_acc, "test_loss": test_total_loss, "final_test_acc": final_test_acc}, step=global_step)
 
@@ -430,7 +436,7 @@ def train(args, resume, has_test_split, devices, kg):
         if args.save_model:
             model_state_dict = model.state_dict()
             del model_state_dict["lmgnn.concept_emb.emb.weight"]
-            checkpoint = {"model": model_state_dict, "optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(), "epoch": epoch_id, "global_step": global_step, "best_dev_epoch": best_dev_epoch, "best_dev_acc": best_dev_acc, "final_test_acc": final_test_acc, "config": args}
+            checkpoint = {"model": model_state_dict, "optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(), "epoch": epoch_id, "global_step": global_step, "best_dev_epoch": best_dev_epoch, "best_dev_acc": best_dev_acc, "final_test_acc": final_test_acc, "best_test_epoch": best_test_epoch, "best_test_acc": best_test_acc,"config": args}
             print('Saving model to {}.{}'.format(model_path, epoch_id))
             torch.save(checkpoint, model_path +".{}".format(epoch_id))
         model.train()
@@ -628,7 +634,7 @@ if __name__ == '__main__':
     parser.add_argument('--init_range', default=0.02, type=float, help='stddev when initializing with normal distribution')
 
     # MyGLM
-    parser.add_argument('--emp',default=True,type=bool)
+    parser.add_argument('--emp',default=False,type=utils.bool_flag)
     
     args = parser.parse_args()
     # print(args.train_statements,args.train_tagged)

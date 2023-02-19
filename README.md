@@ -93,6 +93,10 @@ To train GreaseLM on CommonsenseQA, run
 ```
 CUDA_VISIBLE_DEVICES=0 ./run_greaselm.sh csqa --data_dir data/
 ```
+CSQA with pool
+```
+CUDA_VISIBLE_DEVICES=3 ./run_greaselm.sh csqa --data_dir data/ --use_wandb True --emp False -mbs 4
+```
 You can specify up to 2 GPUs you want to use in the beginning of the command `CUDA_VISIBLE_DEVICES=...`.
 
 Similarly, to train GreaseLM on OpenbookQA, run
@@ -102,7 +106,7 @@ CUDA_VISIBLE_DEVICES=0 ./run_greaselm.sh obqa --data_dir data/
 
 Embedding pool experiment test
 ```
-CUDA_VISIBLE_DEVICES=0 ./run_greaselm.sh obqa --data_dir data/ --use_wandb True --emp True 
+CUDA_VISIBLE_DEVICES=1 ./run_greaselm.sh obqa --data_dir data/ --use_wandb True --emp False  
 ```
 
 Debug
