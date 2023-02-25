@@ -73,8 +73,12 @@ class RobertaPoolEmbeddings(RobertaEmbeddings):
         if self.position_embedding_type == "absolute":
             position_embeddings = self.position_embeddings(position_ids)
             embeddings += position_embeddings
+
+        
         embeddings = self.LayerNorm(embeddings)
+
         embeddings = self.dropout(embeddings)
+
         return embeddings
     
     def pool_input_embeds(self,inputs_embeds,pool_mask):
@@ -167,4 +171,9 @@ if __name__ == "__main__":
     pool_mask[0][3:5] = 1
     pool_mask[-1][2:5] = 1
     
-    pool_input_embeds(inputs_embeds,pool_mask)
+    word_embeddings = nn.Embedding(3,2)
+    idx = torch.tensor([0,0,1])
+    # token_type_embeddings = nn.Embedding(config.type_vocab_size, config.hidden_size)
+    print(word_embeddings(idx).shape)
+    
+    # pool_input_embeds(inputs_embeds,pool_mask)
