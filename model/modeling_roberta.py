@@ -166,14 +166,29 @@ if __name__ == "__main__":
     inputs_embeds = torch.randint(1,10,[bs, seq_len,3], dtype=torch.float)
 
     # pool_mask 
-    pool_mask = torch.zeros([bs, seq_len], dtype=torch.long)
+    pool_mask = torch.zeros([bs, seq_len], dtype=torch.float)
     pool_mask[0][0:2] = 1
     pool_mask[0][3:5] = 1
     pool_mask[-1][2:5] = 1
     
-    word_embeddings = nn.Embedding(3,2)
+    we = nn.Embedding(3,2)
     idx = torch.tensor([0,0,1])
     # token_type_embeddings = nn.Embedding(config.type_vocab_size, config.hidden_size)
-    print(word_embeddings(idx).shape)
+    print(pool_mask)
     
     # pool_input_embeds(inputs_embeds,pool_mask)
+
+    lm = nn.LayerNorm(5, eps=1e-12)
+    print(lm.state_dict().keys())
+    print("参数gamma shape: ", lm.state_dict()['weight'])
+    print("参数beta shape: ", lm.state_dict()['bias'])
+
+    dpo = nn.Dropout(0.7)
+    
+    we = lm(pool_mask)
+    print(we)
+    we = dpo(we)
+    print(we)
+    
+    
+    
