@@ -26,7 +26,7 @@ from utils import data_utils,data_utils_base
 from utils import optimization_utils
 from utils import parser_utils
 from utils import utils
-
+from utils import nv_usage
 
 
 DECODER_DEFAULT_LR = {
@@ -524,8 +524,7 @@ def evaluate(args, has_test_split, devices, kg):
 def get_devices(use_cuda):
     """Get the devices to put the data and the model based on whether to use GPUs and, if so, how many of them are available."""
     if torch.cuda.device_count() >= 2 and use_cuda:
-        device0 = torch.device("cuda:0")
-        device1 = torch.device("cuda:1")
+        [device0, device1] = nv_usage.get_gpu_index(2)
         print("device0: {}, device1: {}".format(device0, device1))
     elif torch.cuda.device_count() == 1 and use_cuda:
         device0 = torch.device("cuda:0")
@@ -533,6 +532,8 @@ def get_devices(use_cuda):
     else:
         device0 = torch.device("cpu")
         device1 = torch.device("cpu")
+    # device0 = torch.device("cuda:0")
+    # device1 = torch.device("cuda:0")
     return device0, device1
 
 
@@ -544,6 +545,7 @@ def main(args):
 
     has_test_split = True
     devices = get_devices(args.cuda)
+
     kg = "cpnet"
     if args.dataset == "medqa_usmle":
         kg = "ddb"
@@ -566,7 +568,7 @@ def main(args):
         print(socket.gethostname())
         print ("pid:", os.getpid())
         print ("screen: %s" % subprocess.check_output('echo $STY', shell=True).decode('utf'))
-        print ("gpu: %s" % subprocess.check_output('echo $CUDA_VISIBLE_DEVICES', shell=True).decode('utf'))
+        # print ("gpu: %s" % subprocess.check_output('echo $CUDA_VISIBLE_DEVICES', shell=True).decode('utf'))
         utils.print_cuda_info()
         print("wandb id: ", wandb_id)
 
