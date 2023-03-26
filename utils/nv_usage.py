@@ -24,7 +24,7 @@ def get_gpu_index(gpu_number):
 
 
 if __name__ == "__main__":
-    print(get_gpu_index(1))
-    print(get_gpu_index(2))
-    print(get_gpu_index(5))
+    # print(get_gpu_index(1))
+    # print(get_gpu_index(2))
+    print(get_gpu_index(8))
     
