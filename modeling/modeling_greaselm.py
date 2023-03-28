@@ -332,7 +332,7 @@ class TextKGMessagePassing(ModelClass):
         self.dropout = nn.Dropout(dropout)
         self.dropout_rate = dropout
 
-        self.encoder = RoBERTaGAT(config, k=k, n_ntype=n_ntype, n_etype=n_etype, hidden_size=concept_dim, dropout=dropout, concept_dim=concept_dim, ie_dim=ie_dim, p_fc=p_fc, info_exchange=info_exchange, ie_layer_num=ie_layer_num, sep_ie_layers=sep_ie_layers)
+        self.encoder = RoBERTaGAT(config, args = args,k=k, n_ntype=n_ntype, n_etype=n_etype, hidden_size=concept_dim, dropout=dropout, concept_dim=concept_dim, ie_dim=ie_dim, p_fc=p_fc, info_exchange=info_exchange, ie_layer_num=ie_layer_num, sep_ie_layers=sep_ie_layers)
 
         self.sent_dim = config.hidden_size
         self.emp = args.emp
@@ -791,7 +791,7 @@ def test_TextKGMessagePassing(device):
 
 class RoBERTaGAT(modeling_bert.BertEncoder):
 
-    def __init__(self, config, k=5, n_ntype=4, n_etype=38, hidden_size=200, dropout=0.2, concept_dim=200, ie_dim=200, p_fc=0.2, info_exchange=True, ie_layer_num=1, sep_ie_layers=False):
+    def __init__(self, config, args = {},k=5, n_ntype=4, n_etype=38, hidden_size=200, dropout=0.2, concept_dim=200, ie_dim=200, p_fc=0.2, info_exchange=True, ie_layer_num=1, sep_ie_layers=False):
         super().__init__(config)
 
         self.k = k
@@ -802,6 +802,7 @@ class RoBERTaGAT(modeling_bert.BertEncoder):
 
         self.sent_dim = config.hidden_size
         self.sep_ie_layers = sep_ie_layers
+        self.args = args
         if sep_ie_layers:
             self.ie_layers = nn.ModuleList([layers.MLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc) for _ in range(k)])
         else:
@@ -811,7 +812,7 @@ class RoBERTaGAT(modeling_bert.BertEncoder):
         self.num_hidden_layers = config.num_hidden_layers
         self.info_exchange = info_exchange
 
-    def forward(self, hidden_states, attention_mask, special_tokens_mask, head_mask, _X, edge_index, edge_type, _node_type, _node_feature_extra, special_nodes_mask, output_attentions=False, output_hidden_states=True):
+    def forward(self, hidden_states, attention_mask, special_tokens_mask, head_mask, _X, edge_index, edge_type, _node_type, _node_feature_extra, special_nodes_mask, output_attentions=False, output_hidden_states=True,pool_mask=[]):
         """
         hidden_states: [bs, seq_len, sent_dim]
         attention_mask: [bs, 1, 1, seq_len]
@@ -831,7 +832,11 @@ class RoBERTaGAT(modeling_bert.BertEncoder):
             if output_hidden_states:
                 all_hidden_states = all_hidden_states + (hidden_states,)
 
-            layer_outputs = layer_module(hidden_states, attention_mask, head_mask[i])
+            if self.args.is_compress:
+                layer_outputs = layer_module(hidden_states, attention_mask, head_mask[i],pool_mask)
+            else:
+                layer_outputs = layer_module(hidden_states, attention_mask, head_mask[i])
+            
             hidden_states = layer_outputs[0]
 
             if output_attentions:

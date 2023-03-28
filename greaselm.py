@@ -532,8 +532,8 @@ def get_devices(use_cuda):
     else:
         device0 = torch.device("cpu")
         device1 = torch.device("cpu")
-    # device0 = torch.device("cuda:0")
-    # device1 = torch.device("cuda:0")
+    # device0 = torch.device("cuda:7")
+    # device1 = torch.device("cuda:7")
     return device0, device1
 
 
@@ -636,7 +636,10 @@ if __name__ == '__main__':
     parser.add_argument('--init_range', default=0.02, type=float, help='stddev when initializing with normal distribution')
 
     # MyGLM
-    parser.add_argument('--emp',default=False,type=utils.bool_flag)
+    parser.add_argument('--emp',default=False,type = utils.bool_flag)
+    parser.add_argument('--is_compress',default=False,type = utils.bool_flag)
+
+    
     
     args = parser.parse_args()
     # print(args.train_statements,args.train_tagged)
