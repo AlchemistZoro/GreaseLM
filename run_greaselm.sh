@@ -31,6 +31,7 @@ else
   n_epochs=30
   max_epochs_before_stop=10
   ie_dim=400
+  mbs=4
 fi
 
 max_seq_len=100

@@ -522,18 +522,18 @@ def evaluate(args, has_test_split, devices, kg):
 
 
 def get_devices(use_cuda):
-    """Get the devices to put the data and the model based on whether to use GPUs and, if so, how many of them are available."""
-    if torch.cuda.device_count() >= 2 and use_cuda:
-        [device0, device1] = nv_usage.get_gpu_index(2)
-        print("device0: {}, device1: {}".format(device0, device1))
-    elif torch.cuda.device_count() == 1 and use_cuda:
-        device0 = torch.device("cuda:0")
-        device1 = torch.device("cuda:0")
-    else:
-        device0 = torch.device("cpu")
-        device1 = torch.device("cpu")
-    # device0 = torch.device("cuda:7")
-    # device1 = torch.device("cuda:7")
+    # """Get the devices to put the data and the model based on whether to use GPUs and, if so, how many of them are available."""
+    # if torch.cuda.device_count() >= 2 and use_cuda:
+    #     [device0, device1] = nv_usage.get_gpu_index(2)
+    #     print("device0: {}, device1: {}".format(device0, device1))
+    # elif torch.cuda.device_count() == 1 and use_cuda:
+    #     device0 = torch.device("cuda:0")
+    #     device1 = torch.device("cuda:0")
+    # else:
+    #     device0 = torch.device("cpu")
+    #     device1 = torch.device("cpu")
+    [device0] = nv_usage.get_gpu_index(1)
+    device1 = device0
     return device0, device1
 
 

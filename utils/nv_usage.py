@@ -12,7 +12,9 @@ def get_gpu_index(gpu_number):
         handle = pynvml.nvmlDeviceGetHandleByIndex(i)
         # Get the GPU utilization
         utilization = pynvml.nvmlDeviceGetUtilizationRates(handle).gpu
-        if utilization == 0:
+        meminfo = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        memrate = meminfo.used/meminfo.total
+        if utilization == 0 and memrate < 0.05:
             gpu_index_list.append(i)
             if len(gpu_index_list) == gpu_number:
                 return gpu_index_list
@@ -24,7 +26,7 @@ def get_gpu_index(gpu_number):
 
 
 if __name__ == "__main__":
-    # print(get_gpu_index(1))
+    print(get_gpu_index(1))
     # print(get_gpu_index(2))
-    print(get_gpu_index(8))
+    # print(get_gpu_index(8))
     
