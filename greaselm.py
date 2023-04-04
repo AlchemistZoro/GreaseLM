@@ -65,7 +65,7 @@ def load_data(args, devices, kg):
         subsample=args.subsample, n_train=args.n_train, debug=args.debug, cxt_node_connects_all=args.cxt_node_connects_all, kg=kg,emp=args.emp,
         train_tagged_path = args.train_tagged,
         dev_tagged_path=args.dev_tagged,
-        test_tagged_path=args.test_tagged,
+        test_tagged_path=args.test_tagged
         )
     
     # GLM Dataloader base version
@@ -638,7 +638,9 @@ if __name__ == '__main__':
     # MyGLM
     parser.add_argument('--emp',default=False,type = utils.bool_flag)
     parser.add_argument('--is_compress',default=False,type = utils.bool_flag)
-
+    parser.add_argument('--use_concept',default=False,type = utils.bool_flag)
+    parser.add_argument('--mix_number',default=1,type = int)
+    parser.add_argument('--all_mix',default=False,type = utils.bool_flag)
     
     
     args = parser.parse_args()

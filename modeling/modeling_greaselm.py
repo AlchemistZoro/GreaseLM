@@ -804,13 +804,15 @@ class RoBERTaGAT(modeling_bert.BertEncoder):
         self.sep_ie_layers = sep_ie_layers
         self.args = args
         if sep_ie_layers:
-            self.ie_layers = nn.ModuleList([layers.MLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc) for _ in range(k)])
+            self.ie_layers = nn.ModuleList([layers.MLP(self.sent_dim + concept_dim*args.mix_number, ie_dim, self.sent_dimv*args.mix_number +concept_dim*args.mix_number, ie_layer_num, p_fc) for _ in range(k)])
         else:
-            self.ie_layer = layers.MLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc)
+            self.ie_layer = layers.MLP(self.sent_dim*args.mix_number + concept_dim*args.mix_number, ie_dim, self.sent_dim*args.mix_number + concept_dim*args.mix_number, ie_layer_num, p_fc)
 
         self.concept_dim = concept_dim
         self.num_hidden_layers = config.num_hidden_layers
         self.info_exchange = info_exchange
+        self.use_concept = args.use_concept
+        self.mix_number = args.mix_number
 
     def forward(self, hidden_states, attention_mask, special_tokens_mask, head_mask, _X, edge_index, edge_type, _node_type, _node_feature_extra, special_nodes_mask, output_attentions=False, output_hidden_states=True,pool_mask=[]):
         """
@@ -851,17 +853,57 @@ class RoBERTaGAT(modeling_bert.BertEncoder):
 
                 # Exchange info between LM and GNN hidden states (Modality interaction)
                 if self.info_exchange == True or (self.info_exchange == "every-other-layer" and (i - self.num_hidden_layers + self.k) % 2 == 0):
+                    # X = _X.view(bs, -1, _X.size(1)) # [bs, max_num_nodes, node_dim]
+                    # context_node_lm_feats = hidden_states[:, 0, :] # [bs, sent_dim]
+                    # context_node_gnn_feats = X[:, 0, :] # [bs, node_dim]
+                    # # [32,1224]
+                    # context_node_feats = torch.cat([context_node_lm_feats, context_node_gnn_feats], dim=1)
+
+                    # if self.sep_ie_layers:
+                    #     context_node_feats = self.ie_layers[gnn_layer_index](context_node_feats)
+                    # else:
+                    #     context_node_feats = self.ie_layer(context_node_feats)
+                    # context_node_lm_feats, context_node_gnn_feats = torch.split(context_node_feats, [context_node_lm_feats.size(1), context_node_gnn_feats.size(1)], dim=1)
+                    # hidden_states[:, 0, :] = context_node_lm_feats
+                    # X[:, 0, :] = context_node_gnn_feats
+                    # _X = X.view_as(_X)
                     X = _X.view(bs, -1, _X.size(1)) # [bs, max_num_nodes, node_dim]
-                    context_node_lm_feats = hidden_states[:, 0, :] # [bs, sent_dim]
-                    context_node_gnn_feats = X[:, 0, :] # [bs, node_dim]
-                    context_node_feats = torch.cat([context_node_lm_feats, context_node_gnn_feats], dim=1)
-                    if self.sep_ie_layers:
-                        context_node_feats = self.ie_layers[gnn_layer_index](context_node_feats)
+                    # 全量融合，细粒度融合
+                    if not self.args.all_mix:
+                        context_node_lm_feats = hidden_states[:, :self.mix_number, :] # [bs, sent_dim]
+                        context_node_lm_feats = context_node_lm_feats.view(bs,1,-1)
+                        context_node_lm_feats = torch.squeeze(context_node_lm_feats)
+                        context_node_gnn_feats = X[:, :self.mix_number, :] # [bs, node_dim]
+                        context_node_gnn_feats = context_node_gnn_feats.view(bs,1,-1)
+                        context_node_gnn_feats = torch.squeeze(context_node_gnn_feats)
+                        context_node_feats = torch.cat([context_node_lm_feats, context_node_gnn_feats], dim=1)
+
+                        if self.sep_ie_layers:
+                            context_node_feats = self.ie_layers[gnn_layer_index](context_node_feats)
+                        else:
+                            context_node_feats = self.ie_layer(context_node_feats)
+                        context_node_lm_feats, context_node_gnn_feats = torch.split(context_node_feats, [context_node_lm_feats.size(1), context_node_gnn_feats.size(1)], dim=1)
+                        hidden_states[:, :self.mix_number, :] = context_node_lm_feats.view(bs,self.mix_number,-1)
+                        X[:, :self.mix_number, :] = context_node_gnn_feats.view(bs,self.mix_number,-1)
                     else:
-                        context_node_feats = self.ie_layer(context_node_feats)
-                    context_node_lm_feats, context_node_gnn_feats = torch.split(context_node_feats, [context_node_lm_feats.size(1), context_node_gnn_feats.size(1)], dim=1)
-                    hidden_states[:, 0, :] = context_node_lm_feats
-                    X[:, 0, :] = context_node_gnn_feats
+                        l = hidden_states.shape[1]
+                        h = X.shape[1]
+                        context_node_lm_feats = hidden_states # [bs, sent_dim]
+                        context_node_lm_feats = context_node_lm_feats.view(bs,1,-1)
+                        context_node_lm_feats = torch.squeeze(context_node_lm_feats)
+                        context_node_gnn_feats = X # [bs, node_dim]
+                        context_node_gnn_feats = context_node_lm_feats.view(bs,1,-1)
+                        context_node_gnn_feats = torch.squeeze(context_node_lm_feats)
+
+                        context_node_feats = torch.cat([context_node_lm_feats, context_node_gnn_feats], dim=1)
+
+                        if self.sep_ie_layers:
+                            context_node_feats = self.ie_layers[gnn_layer_index](context_node_feats)
+                        else:
+                            context_node_feats = self.ie_layer(context_node_feats)
+                        context_node_lm_feats, context_node_gnn_feats = torch.split(context_node_feats, [context_node_lm_feats.size(1), context_node_gnn_feats.size(1)], dim=1)
+                        hidden_states = context_node_lm_feats.view(bs,l,-1)
+                        X = context_node_gnn_feats.view(bs,h,-1)
                     _X = X.view_as(_X)
 
         # Add last layer
