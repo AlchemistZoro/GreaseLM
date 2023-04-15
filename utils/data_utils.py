@@ -93,7 +93,7 @@ class MultiGPUSparseAdjDataBatchGenerator(object):
             return obj.to(device)
 
 
-class GreaseLM_DataLoader(object):
+class ConceptLM_DataLoader(object):
 
     def __init__(self, train_statement_path, train_adj_path,
                  dev_statement_path, dev_adj_path,

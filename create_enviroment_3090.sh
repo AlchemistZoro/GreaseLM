@@ -1,7 +1,7 @@
 # create enciroment for RTX3090
 # CUDA version >= 11.1, torch version >=1.7.0
-conda create -y -n glm python=3.8
-conda activate glm
+conda create -y -n clm python=3.8
+conda activate clm
 
 # should use conda to install pytorch, use pip will get the OSError
 conda install pytorch==1.12.0 torchvision==0.13.0 torchaudio==0.12.0 cudatoolkit=11.3 -c pytorch

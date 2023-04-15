@@ -131,7 +131,7 @@ dmypy.json
 # Vscode file
 .vscode/
 
-# GreaseLM project specific
+# ConceptLM project specific
 data/
 data_download/
 logs/
@@ -141,7 +141,7 @@ wandb/
 checkpoint/
 log_useful/
 
-# GreaseLM running generate
+# ConceptLM running generate
 filtered_concept.txt
 matcher_res.json
 

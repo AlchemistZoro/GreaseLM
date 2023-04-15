@@ -1,4 +1,4 @@
-# 原版的modeling_greaselm
+# 原版的modeling_conceptlm
 import logging
 import os
 
@@ -33,7 +33,7 @@ else:
 print ('ModelClass', ModelClass)
 
 
-class GreaseLM(nn.Module):
+class ConceptLM(nn.Module):
 
     def __init__(self, args={}, model_name="roberta-large", k=5, n_ntype=4, n_etype=38,
                  n_concept=799273, concept_dim=200, concept_in_dim=1024, n_attention_head=2,
@@ -129,9 +129,9 @@ class GreaseLM(nn.Module):
         n_edges = 3
 
 
-def test_GreaseLM(device):
+def test_ConceptLM(device):
     cp_emb = torch.load("data/cpnet/cp_emb.pt")
-    model = GreaseLM(pretrained_concept_emb=cp_emb).to(device)
+    model = ConceptLM(pretrained_concept_emb=cp_emb).to(device)
     inputs = model.get_fake_inputs(device)
     outputs = model(*inputs)
     model.check_outputs(*outputs)
@@ -901,4 +901,4 @@ if __name__ == "__main__":
 
     # test_LMGNN(device)
 
-    # test_GreaseLM(device)
+    # test_ConceptLM(device)

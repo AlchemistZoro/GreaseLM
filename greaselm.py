@@ -20,7 +20,7 @@ except:
 
 import wandb
 
-from modeling import modeling_greaselm
+from modeling import modeling_conceptlm
 
 from utils import data_utils,data_utils_base
 from utils import optimization_utils
@@ -54,7 +54,7 @@ def load_data(args, devices, kg):
     # Construct the dataset
     #########################################################
     
-    dataset = data_utils.GreaseLM_DataLoader(args.train_statements, args.train_adj,
+    dataset = data_utils.ConceptLM_DataLoader(args.train_statements, args.train_adj,
         args.dev_statements, args.dev_adj,
         args.test_statements, args.test_adj,
         batch_size=args.batch_size, eval_batch_size=args.eval_batch_size,
@@ -69,7 +69,7 @@ def load_data(args, devices, kg):
         )
     
     # GLM Dataloader base version
-    # dataset = data_utils_base.GreaseLM_DataLoader(args.train_statements, args.train_adj,
+    # dataset = data_utils_base.ConceptLM_DataLoader(args.train_statements, args.train_adj,
     #     args.dev_statements, args.dev_adj,
     #     args.test_statements, args.test_adj,
     #     batch_size=args.batch_size, eval_batch_size=args.eval_batch_size,
@@ -114,7 +114,7 @@ def construct_model(args, kg):
         raise ValueError("Invalid KG.")
     if args.cxt_node_connects_all:
         n_etype += 2
-    model = modeling_greaselm.GreaseLM(args, args.encoder, k=args.k, n_ntype=n_ntype, n_etype=n_etype, n_concept=concept_num,
+    model = modeling_conceptlm.ConceptLM(args, args.encoder, k=args.k, n_ntype=n_ntype, n_etype=n_etype, n_concept=concept_num,
         concept_dim=args.gnn_dim,
         concept_in_dim=concept_in_dim,
         n_attention_head=args.att_head_num, fc_dim=args.fc_dim, n_fc_layer=args.fc_layer_num,
@@ -602,7 +602,7 @@ if __name__ == '__main__':
     # input()
     # General
     parser.add_argument('--mode', default='train', choices=['train', 'eval'], help='run training or evaluation')
-    parser.add_argument('--save_dir', default=f'./saved_models/greaselm/', help='model output directory')
+    parser.add_argument('--save_dir', default=f'./saved_models/conceptlm/', help='model output directory')
     parser.add_argument('--save_model', default=True, type=utils.bool_flag, help="Whether to save model checkpoints or not.")
     parser.add_argument('--load_model_path', default=None, help="The model checkpoint to load in the evaluation mode.")
     parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='show this help message and exit')
@@ -621,16 +621,16 @@ if __name__ == '__main__':
     parser.add_argument('--n_train', default=-1, type=int, help="Number of training examples to use. Setting it to -1 means using the `subsample` argument to determine the training set size instead; otherwise it will override the `subsample` argument.")
 
     # Model architecture
-    parser.add_argument('-k', '--k', default=5, type=int, help='The number of GreaseLM layers')
+    parser.add_argument('-k', '--k', default=5, type=int, help='The number of ConceptLM layers')
     parser.add_argument('--att_head_num', default=2, type=int, help='number of attention heads of the final graph nodes\' pooling')
     parser.add_argument('--gnn_dim', default=100, type=int, help='dimension of the GNN layers')
     parser.add_argument('--fc_dim', default=200, type=int, help='number of FC hidden units (except for the MInt operators)')
     parser.add_argument('--fc_layer_num', default=0, type=int, help='number of hidden layers of the final MLP')
     parser.add_argument('--freeze_ent_emb', default=True, type=utils.bool_flag, nargs='?', const=True, help='Whether to freeze the entity embedding layer.')
     parser.add_argument('--ie_dim', default=200, type=int, help='number of the hidden units of the MInt operator.')
-    parser.add_argument('--info_exchange', default=True, choices=[True, False, "every-other-layer"], type=utils.bool_str_flag, help="Whether we have the MInt operator in every GreaseLM layer or every other GreaseLM layer or not at all.")
+    parser.add_argument('--info_exchange', default=True, choices=[True, False, "every-other-layer"], type=utils.bool_str_flag, help="Whether we have the MInt operator in every ConceptLM layer or every other ConceptLM layer or not at all.")
     parser.add_argument('--ie_layer_num', default=1, type=int, help='number of hidden layers in the MInt operator')
-    parser.add_argument("--sep_ie_layers", default=False, type=utils.bool_flag, help="Whether to share parameters across the MInt ops across differernt GreaseLM layers or not. Setting it to `False` means sharing.")
+    parser.add_argument("--sep_ie_layers", default=False, type=utils.bool_flag, help="Whether to share parameters across the MInt ops across differernt ConceptLM layers or not. Setting it to `False` means sharing.")
     parser.add_argument('--random_ent_emb', default=False, type=utils.bool_flag, nargs='?', const=True, help='Whether to use randomly initialized learnable entity embeddings or not.')
     parser.add_argument("--cxt_node_connects_all", default=False, type=utils.bool_flag, help="Whether to connect the interaction node to all the retrieved KG nodes or only the linked nodes.")
 

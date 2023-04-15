@@ -1,9 +1,9 @@
-# GreaseLM: Graph REASoning Enhanced Language Models for Question Answering
+# ConceptLM: Graph REASoning Enhanced Language Models for Question Answering
 
-This repo provides the source code & data of our paper [GreaseLM: Graph REASoning Enhanced Language Models for Question Answering](https://arxiv.org/abs/2201.08860) (ICLR 2022 spotlight). If you use any of our code, processed data or pretrained models, please cite:
+This repo provides the source code & data of our paper [ConceptLM: Graph REASoning Enhanced Language Models for Question Answering](https://arxiv.org/abs/2201.08860) (ICLR 2022 spotlight). If you use any of our code, processed data or pretrained models, please cite:
 ```bib
-@inproceedings{zhang2021greaselm,
-  title={GreaseLM: Graph REASoning Enhanced Language Models},
+@inproceedings{zhang2021conceptlm,
+  title={ConceptLM: Graph REASoning Enhanced Language Models},
   author={Zhang, Xikun and Bosselut, Antoine and Yasunaga, Michihiro and Ren, Hongyu and Liang, Percy and Manning, Christopher D and Leskovec, Jure},
   booktitle={International Conference on Learning Representations},
   year={2021}
@@ -11,7 +11,7 @@ This repo provides the source code & data of our paper [GreaseLM: Graph REASonin
 ```
 
 <p align="center">
-  <img src="./figs/greaselm.png" width="600" title="GreaseLM model architecture" alt="">
+  <img src="./figs/conceptlm.png" width="600" title="ConceptLM model architecture" alt="">
 </p>
 
 ## 1. Dependencies
@@ -23,8 +23,8 @@ This repo provides the source code & data of our paper [GreaseLM: Graph REASonin
 
 Run the following commands to create a conda environment (assuming CUDA 10.1):
 ```bash
-conda create -y -n greaselm python=3.8
-conda activate greaselm
+conda create -y -n conceptlm python=3.8
+conda activate conceptlm
 pip install numpy==1.18.3 tqdm
 pip install torch==1.8.0+cu101 torchvision -f https://download.pytorch.org/whl/torch_stable.html
 pip install transformers==3.4.0 nltk spacy
@@ -88,58 +88,58 @@ The resulting file structure should look like this:
     └── ddb/
 ```
 
-## 3. Training GreaseLM
-To train GreaseLM on CommonsenseQA, run
+## 3. Training ConceptLM
+To train ConceptLM on CommonsenseQA, run
 ```
-CUDA_VISIBLE_DEVICES=0 ./run_greaselm.sh csqa --data_dir data/
+CUDA_VISIBLE_DEVICES=0 ./run_conceptlm.sh csqa --data_dir data/
 ```
 CSQA with pool
 ```
-CUDA_VISIBLE_DEVICES=3 ./run_greaselm.sh csqa --data_dir data/ --use_wandb True --emp False -mbs 4
+CUDA_VISIBLE_DEVICES=3 ./run_conceptlm.sh csqa --data_dir data/ --use_wandb True --emp False -mbs 4
 ```
 You can specify up to 2 GPUs you want to use in the beginning of the command `CUDA_VISIBLE_DEVICES=...`.
 
-Similarly, to train GreaseLM on OpenbookQA, run
+Similarly, to train ConceptLM on OpenbookQA, run
 ```
-CUDA_VISIBLE_DEVICES=0 ./run_greaselm.sh obqa --data_dir data/
+CUDA_VISIBLE_DEVICES=0 ./run_conceptlm.sh obqa --data_dir data/
 ```
 
 Embedding pool experiment test
 ```
-CUDA_VISIBLE_DEVICES=1 ./run_greaselm.sh obqa --data_dir data/ --use_wandb True --emp False  
+CUDA_VISIBLE_DEVICES=1 ./run_conceptlm.sh obqa --data_dir data/ --use_wandb True --emp False  
 ```
 
 Debug
 ```
-CUDA_VISIBLE_DEVICES=0 ./run_greaselm.sh obqa --data_dir data/  --emp True --debug True
+CUDA_VISIBLE_DEVICES=0 ./run_conceptlm.sh obqa --data_dir data/  --emp True --debug True
 ```
 
-To train GreaseLM on MedQA-USMLE, run
+To train ConceptLM on MedQA-USMLE, run
 ```
-CUDA_VISIBLE_DEVICES=0 ./run_greaselm__medqa_usmle.sh
+CUDA_VISIBLE_DEVICES=0 ./run_conceptlm__medqa_usmle.sh
 ```
 
 ## 4. Pretrained model checkpoints
-You can download a pretrained GreaseLM model on CommonsenseQA [here](https://drive.google.com/file/d/1QPwLZFA6AQ-pFfDR6TWLdBAvm3c_HOUr/view?usp=sharing), which achieves an IH-dev acc. of `79.0` and an IH-test acc. of `74.0`.
+You can download a pretrained ConceptLM model on CommonsenseQA [here](https://drive.google.com/file/d/1QPwLZFA6AQ-pFfDR6TWLdBAvm3c_HOUr/view?usp=sharing), which achieves an IH-dev acc. of `79.0` and an IH-test acc. of `74.0`.
 
-You can also download a pretrained GreaseLM model on OpenbookQA [here](https://drive.google.com/file/d/1-QqyiQuU9xlN20vwfIaqYQ_uJMP8d7Pv/view?usp=sharing), which achieves an test acc. of `84.8`.
+You can also download a pretrained ConceptLM model on OpenbookQA [here](https://drive.google.com/file/d/1-QqyiQuU9xlN20vwfIaqYQ_uJMP8d7Pv/view?usp=sharing), which achieves an test acc. of `84.8`.
 
-You can also download a pretrained GreaseLM model on MedQA-USMLE [here](https://drive.google.com/file/d/1j0QxiBiGbv0s9PhseSly6V6uiHWU5IEt/view?usp=sharing), which achieves an test acc. of `38.5`.
+You can also download a pretrained ConceptLM model on MedQA-USMLE [here](https://drive.google.com/file/d/1j0QxiBiGbv0s9PhseSly6V6uiHWU5IEt/view?usp=sharing), which achieves an test acc. of `38.5`.
 
 ## 5. Evaluating a pretrained model checkpoint
-To evaluate a pretrained GreaseLM model checkpoint on CommonsenseQA, run
+To evaluate a pretrained ConceptLM model checkpoint on CommonsenseQA, run
 ```
-CUDA_VISIBLE_DEVICES=0 ./eval_greaselm.sh csqa --data_dir data/ --load_model_path /path/to/checkpoint
+CUDA_VISIBLE_DEVICES=0 ./eval_conceptlm.sh csqa --data_dir data/ --load_model_path /path/to/checkpoint
 ```
 Again you can specify up to 2 GPUs you want to use in the beginning of the command `CUDA_VISIBLE_DEVICES=...`.
 
-Similarly, to evaluate a pretrained GreaseLM model checkpoint on OpenbookQA, run
+Similarly, to evaluate a pretrained ConceptLM model checkpoint on OpenbookQA, run
 ```
-CUDA_VISIBLE_DEVICES=0 ./eval_greaselm.sh obqa --data_dir data/ --load_model_path /path/to/checkpoint
+CUDA_VISIBLE_DEVICES=0 ./eval_conceptlm.sh obqa --data_dir data/ --load_model_path /path/to/checkpoint
 ```
-To evaluate a pretrained GreaseLM model checkpoint on MedQA-USMLE, run
+To evaluate a pretrained ConceptLM model checkpoint on MedQA-USMLE, run
 ```
-INHERIT_BERT=1 CUDA_VISIBLE_DEVICES=0 ./eval_greaselm.sh medqa_usmle --data_dir data/ --load_model_path /path/to/checkpoint
+INHERIT_BERT=1 CUDA_VISIBLE_DEVICES=0 ./eval_conceptlm.sh medqa_usmle --data_dir data/ --load_model_path /path/to/checkpoint
 ```
 
 ## 6. Use your own dataset

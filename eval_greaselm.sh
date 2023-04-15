@@ -13,10 +13,10 @@ echo "***** hyperparameters *****"
 echo "dataset: $dataset"
 echo "******************************"
 
-run_name=eval__greaselm__${dataset}__${dt}
+run_name=eval__conceptlm__${dataset}__${dt}
 
 ###### Eval ######
-python3 -u greaselm.py \
+python3 -u conceptlm.py \
     --run_name ${run_name} \
     --mode ${mode} -ebs ${ebs} --dataset ${dataset} \
     $args

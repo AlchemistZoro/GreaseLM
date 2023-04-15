@@ -16,7 +16,7 @@ unfreeze_epoch=4
 k=5 #num of gnn layers
 gnndim=200
 
-# Existing arguments but changed for GreaseLM
+# Existing arguments but changed for ConceptLM
 encoder_layer=-1
 max_node_num=200
 seed=5
@@ -37,7 +37,7 @@ fi
 max_seq_len=100
 ent_emb=tzw
 
-# Added for GreaseLM
+# Added for ConceptLM
 info_exchange=true
 ie_layer_num=1
 resume_checkpoint=None
@@ -57,11 +57,11 @@ echo "******************************"
 save_dir_pref='runs'
 mkdir -p $save_dir_pref
 
-run_name=greaselm__ds_${dataset}__enc_${encoder}__k${k}__sd${seed}__iedim${ie_dim}__${dt}
+run_name=conceptlm__ds_${dataset}__enc_${encoder}__k${k}__sd${seed}__iedim${ie_dim}__${dt}
 log=logs/train_${dataset}__${run_name}.log.txt
 
 ###### Training ######
-python3 -u greaselm.py \
+python3 -u conceptlm.py \
     --dataset $dataset \
     --encoder $encoder -k $k --gnn_dim $gnndim -elr $elr -dlr $dlr -bs $bs --seed $seed -mbs ${mbs} --unfreeze_epoch ${unfreeze_epoch} --encoder_layer=${encoder_layer} -sl ${max_seq_len} --max_node_num ${max_node_num} \
     --n_epochs $n_epochs --max_epochs_before_stop ${max_epochs_before_stop} \

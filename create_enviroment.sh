@@ -1,5 +1,5 @@
-conda create -y -n greaselm python=3.8
-conda activate greaselm
+conda create -y -n conceptlm python=3.8
+conda activate conceptlm
 pip install numpy==1.18.3 tqdm
 pip install torch==1.8.0+cu101 torchvision -f https://download.pytorch.org/whl/torch_stable.html
 pip install transformers==3.4.0 nltk spacy
