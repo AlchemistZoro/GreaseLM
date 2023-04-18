@@ -577,7 +577,7 @@ def main(args):
 
     args.hf_version = transformers.__version__
 
-    with wandb.init(project="KG-LM", config=args, name=args.run_name, resume="allow", id=wandb_id, settings=wandb.Settings(start_method="fork"), mode=wandb_mode):
+    with wandb.init(project="CLM-TEST", config=args, name=args.run_name, resume="allow", id=wandb_id, settings=wandb.Settings(start_method="fork"), mode=wandb_mode):
         print(socket.gethostname())
         print ("pid:", os.getpid())
         print ("screen: %s" % subprocess.check_output('echo $STY', shell=True).decode('utf'))

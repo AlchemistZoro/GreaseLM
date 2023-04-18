@@ -1,18 +1,4 @@
-# ConceptLM: Graph REASoning Enhanced Language Models for Question Answering
-
-This repo provides the source code & data of our paper [ConceptLM: Graph REASoning Enhanced Language Models for Question Answering](https://arxiv.org/abs/2201.08860) (ICLR 2022 spotlight). If you use any of our code, processed data or pretrained models, please cite:
-```bib
-@inproceedings{zhang2021conceptlm,
-  title={ConceptLM: Graph REASoning Enhanced Language Models},
-  author={Zhang, Xikun and Bosselut, Antoine and Yasunaga, Michihiro and Ren, Hongyu and Liang, Percy and Manning, Christopher D and Leskovec, Jure},
-  booktitle={International Conference on Learning Representations},
-  year={2021}
-}
-```
-
-<p align="center">
-  <img src="./figs/conceptlm.png" width="600" title="ConceptLM model architecture" alt="">
-</p>
+# ConceptLM
 
 ## 1. Dependencies
 
@@ -66,92 +52,52 @@ The script to download and preprocess the [MedQA-USMLE](https://github.com/jind1
 ### Directly download preprocessed data
 For your convenience, if you don't want to preprocess the data yourself, you can download all the preprocessed data [here](https://drive.google.com/drive/folders/1T6B4nou5P3u-6jr0z6e3IkitO8fNVM6f?usp=sharing). Download them into the top-level directory of this repo and unzip them. Move the `medqa_usmle` and `ddb` folders into the `data/` directory.
 
-### Resulting file structure
 
-The resulting file structure should look like this:
-
-```plain
-.
-├── README.md
-├── data/
-    ├── cpnet/                 (prerocessed ConceptNet)
-    ├── csqa/
-        ├── train_rand_split.jsonl
-        ├── dev_rand_split.jsonl
-        ├── test_rand_split_no_answers.jsonl
-        ├── statement/             (converted statements)
-        ├── grounded/              (grounded entities)
-        ├── graphs/                (extracted subgraphs)
-        ├── ...
-    ├── obqa/
-    ├── medqa_usmle/
-    └── ddb/
-```
 
 ## 3. Training ConceptLM
 To train ConceptLM on CommonsenseQA, run
 ```
 CUDA_VISIBLE_DEVICES=0 ./run_conceptlm.sh csqa --data_dir data/
 ```
-CSQA with pool
-```
-CUDA_VISIBLE_DEVICES=3 ./run_conceptlm.sh csqa --data_dir data/ --use_wandb True --emp False -mbs 4
-```
-You can specify up to 2 GPUs you want to use in the beginning of the command `CUDA_VISIBLE_DEVICES=...`.
 
-Similarly, to train ConceptLM on OpenbookQA, run
-```
-CUDA_VISIBLE_DEVICES=0 ./run_conceptlm.sh obqa --data_dir data/
-```
-
-Embedding pool experiment test
-```
-CUDA_VISIBLE_DEVICES=1 ./run_conceptlm.sh obqa --data_dir data/ --use_wandb True --emp False  
-```
-
-Debug
+Debug on OBQA
 ```
 CUDA_VISIBLE_DEVICES=0 ./run_conceptlm.sh obqa --data_dir data/  --emp True --debug True
 ```
 
-To train ConceptLM on MedQA-USMLE, run
+
+## 4. Experimental expansion
+### BASE MODEL
 ```
-CUDA_VISIBLE_DEVICES=0 ./run_conceptlm__medqa_usmle.sh
+./run_conceptlm.sh obqa --data_dir data/ --emp False --use_wandb True 
+./run_conceptlm.sh csqa --data_dir data/ --emp False --use_wandb True 
 ```
 
-## 4. Pretrained model checkpoints
-You can download a pretrained ConceptLM model on CommonsenseQA [here](https://drive.google.com/file/d/1QPwLZFA6AQ-pFfDR6TWLdBAvm3c_HOUr/view?usp=sharing), which achieves an IH-dev acc. of `79.0` and an IH-test acc. of `74.0`.
+### Different number of mixed coding layers
+```
+./run_conceptlm.sh obqa --data_dir data/ --emp False --use_wandb True -k 1
+./run_conceptlm.sh obqa --data_dir data/ --emp False --use_wandb True -k 3
+./run_conceptlm.sh obqa --data_dir data/ --emp False --use_wandb True -k 7
+```
+### Entity encoding node
+```
+./run_conceptlm.sh obqa --data_dir data/ --emp True --use_wandb True -k 1
+./run_conceptlm.sh obqa --data_dir data/ --emp True --use_wandb True -k 3
+./run_conceptlm.sh obqa --data_dir data/ --emp True --use_wandb True -k 5
+./run_conceptlm.sh obqa --data_dir data/ --emp True --use_wandb True -k 7
+./run_conceptlm.sh csqa --data_dir data/ --emp True --use_wandb True -k 5
+```
+### Different number of interaction nodes
+```
+./run_conceptlm.sh obqa --data_dir data/ --emp False --use_wandb True --mix_number 2
+./run_conceptlm.sh obqa --data_dir data/ --emp False --use_wandb True --mix_number 3
+./run_conceptlm.sh obqa --data_dir data/ --emp False --use_wandb True --mix_number 5
+./run_conceptlm.sh obqa --data_dir data/ --emp False --use_wandb True --mix_number 10 
+./run_conceptlm.sh obqa --data_dir data/ --emp False --use_wandb True --mix_number 20
+```
+### Subgraphs of different number of nodes
+```
+./run_conceptlm.sh obqa --data_dir data/ --emp False --use_wandb True --gnn_dim 100
+./run_conceptlm.sh obqa --data_dir data/ --emp False --use_wandb True --gnn_dim 300
+```
 
-You can also download a pretrained ConceptLM model on OpenbookQA [here](https://drive.google.com/file/d/1-QqyiQuU9xlN20vwfIaqYQ_uJMP8d7Pv/view?usp=sharing), which achieves an test acc. of `84.8`.
-
-You can also download a pretrained ConceptLM model on MedQA-USMLE [here](https://drive.google.com/file/d/1j0QxiBiGbv0s9PhseSly6V6uiHWU5IEt/view?usp=sharing), which achieves an test acc. of `38.5`.
-
-## 5. Evaluating a pretrained model checkpoint
-To evaluate a pretrained ConceptLM model checkpoint on CommonsenseQA, run
-```
-CUDA_VISIBLE_DEVICES=0 ./eval_conceptlm.sh csqa --data_dir data/ --load_model_path /path/to/checkpoint
-```
-Again you can specify up to 2 GPUs you want to use in the beginning of the command `CUDA_VISIBLE_DEVICES=...`.
-
-Similarly, to evaluate a pretrained ConceptLM model checkpoint on OpenbookQA, run
-```
-CUDA_VISIBLE_DEVICES=0 ./eval_conceptlm.sh obqa --data_dir data/ --load_model_path /path/to/checkpoint
-```
-To evaluate a pretrained ConceptLM model checkpoint on MedQA-USMLE, run
-```
-INHERIT_BERT=1 CUDA_VISIBLE_DEVICES=0 ./eval_conceptlm.sh medqa_usmle --data_dir data/ --load_model_path /path/to/checkpoint
-```
-
-## 6. Use your own dataset
-- Convert your dataset to  `{train,dev,test}.statement.jsonl`  in .jsonl format (see `data/csqa/statement/train.statement.jsonl`)
-- Create a directory in `data/{yourdataset}/` to store the .jsonl files
-- Modify `preprocess.py` and perform subgraph extraction for your data
-- Modify `utils/parser_utils.py` to support your own dataset
-
-## 7. Acknowledgment
-This repo is built upon the following work:
-```
-QA-GNN: Question Answering using Language Models and Knowledge Graphs
-https://github.com/michiyasunaga/qagnn
-```
-Many thanks to the authors and developers!
